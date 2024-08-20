@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        let productos = [
+    [ 1,  'Jabón Líquido',  2.99 ],
+    [ 2,  'Desinfectante Multiusos',  3.49 ],
+    [ 3,  'Detergente para Ropa',  5.99 ],
+    [ 4,  'Limpiador de Vidrios',  1.99 ],
+    [ 5,  'Suavizante de Telas',  4.49 ],
+    [ 6,  'Limpiador de Baños',  3.29 ],
+    [ 7,  'Limpiador de Cocina',  2.79 ],
+    [ 8,  'Desinfectante en Aerosol',  3.99 ],
+    [ 9,  'Toallitas Desinfectantes',  4.99 ],
+    [ 10,  'Detergente para Platos',  2.49 ],
+    [ 11,  'Limpiador de Pisos',  3.89 ],
+    [ 12,  'Blanqueador',  1.99 ],
+    [ 13,  'Limpiador de Alfombras',  6.49 ],
+    [ 14,  'Limpiador de Muebles',  4.19 ],
+    [ 15,  'Limpiador de Juntas',  3.59 ],
+    [ 16,  'Desengrasante',  3.69 ],
+    [ 17,  'Limpiador de Acero Inoxidable',  4.79 ],
+    [ 18,  'Desodorante Ambiental',  2.59 ],
+    [ 19,  'Jabón en Polvo',  3.99 ],
+    [ 20,  'Limpiador de Calzado',  5.19 ],
+    [ 21,  'Limpiador de Superficies',  2.89 ],
+    [ 22,  'Detergente para Lavavajillas',  6.99 ],
+    [ 23,  'Limpiador de Ventanas',  1.89 ],
+    [ 24,  'Desinfectante para Manos',  3.29 ],
+    [ 25,  'Limpiador de Baldosas',  4.59 ]
+];
+
+function guardar() {
+        var contenidoSQL = document.getElementById("resultado").innerHTML; // Obtener el contenido SQL generado
+        contenidoSQL = contenidoSQL.replace(/<br\s*\/?>/gi, '\n'); // Reemplazar <br> con \n
+        var nombreArchivo = "script_sql"; // Nombre del archivo sin la extensión .sql
+        var blob = new Blob([contenidoSQL], { type: 'text/sql' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nombreArchivo + '.sql'; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+function generarFechaAleatoria(inicio, fin) {
+    // Convertir las fechas de inicio y fin a objetos Date
+    const fechaInicio = new Date(inicio);
+    const fechaFin = new Date(fin);
+
+    // Calcular la diferencia en milisegundos entre las dos fechas
+    const diferencia = fechaFin - fechaInicio;
+
+    // Generar un número aleatorio en el rango de la diferencia
+    const milisegundosAleatorios = Math.floor(Math.random() * diferencia);
+
+    // Sumar los milisegundos aleatorios a la fecha de inicio
+    const fechaAleatoria = new Date(fechaInicio.getTime() + milisegundosAleatorios);
+
+    // Formatear la fecha en formato YYYY-MM-DD
+    const anioFormateado = fechaAleatoria.getFullYear();
+    const mesFormateado = String(fechaAleatoria.getMonth() + 1).padStart(2, '0'); // Los meses son 0-indexados
+    const diaFormateado = String(fechaAleatoria.getDate()).padStart(2, '0');
+
+    return `${anioFormateado}-${mesFormateado}-${diaFormateado}`;
+}
+
+// Generar y mostrar 5 fechas aleatorias entre dos fechas
+const fechaInicio = '1900-01-01';
+const fechaFin = '2024-12-31';
+
+function generarHoraAleatoria() {
+    // Generar un número aleatorio para las horas (0-23)
+    const horas = Math.floor(Math.random() * 24);
+    // Generar un número aleatorio para los minutos (0-59)
+    const minutos = Math.floor(Math.random() * 60);
+    // Generar un número aleatorio para los segundos (0-59)
+    const segundos = Math.floor(Math.random() * 60);
+    
+    // Formatear horas, minutos y segundos para que tengan dos dígitos
+    const horaFormateada = String(horas).padStart(2, '0');
+    const minutosFormateados = String(minutos).padStart(2, '0');
+    const segundosFormateados = String(segundos).padStart(2, '0');
+
+    // Devolver la hora en formato HH:MM:SS
+    return `${horaFormateada}:${minutosFormateados}:${segundosFormateados}`;
+}
+
+function generar() {
+
+    var salida = `DROP DATABASE IF EXISTS pos;<BR> CREATE DATABASE IF NOT EXISTS pos; <br>
+                USE pos; <br>
+                CREATE TABLE IF NOT EXISTS productos(codigo VARCHAR(255) NOT NULL UNIQUE, 
+                nombre VARCHAR(255) NOT NULL, precio FLOAT (9,2) NOT NULL); <br>`;
+
+    for (let i = 0; i < productos.length; i++) {
+        salida+="INSERT INTO productos(codigo, nombre, precio) VALUES('"+productos[i][0]+"', '"+productos[i][1]+"', '"+productos[i][2]+"');<br>";
+
+    }   
+    
+    salida+=`<BR><BR>CREATE TABLE IF NOT EXISTS ventas(id_venta INT UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT, 
+    hora_venta TIME NOT NULL, fecha_venta DATE NOT NULL); <br> 
+    INSERT INTO ventas(id_venta, hora_venta, fecha_venta) VALUES `;
+    
+    for (let i = 1; i < 20001; i++) {
+
+        salida+=`('${i}','${generarHoraAleatoria()}','${generarFechaAleatoria(fechaInicio, fechaFin)}'), <br>`;
+
+        }
+        salida = salida.slice(0, -6) + ";";
+        salida+=`<BR><BR> DROP TABLE IF EXISTS ventas_detalle;<BR><BR>
+        CREATE TABLE IF NOT EXISTS ventas_detalle(id_venta INT UNSIGNED NOT NULL,codigo VARCHAR(255) NOT NULL,nombre_producto VARCHAR (255) NOT NULL,precio_producto FLOAT (9,2) NOT NULL);
+        <BR> INSERT INTO ventas_detalle VALUES `;
+            for (let i = 1; i < 20001; i++) {
+             var cantidad=generarNumeroAleatorio(1,20);
+             for (let j = 0; j < cantidad; j++) {
+          var producto=productos[generarNumeroAleatorio(0,19)]
+     salida+= `('${i}','${producto[0]}','${producto[1]}','${producto[2]}'),<BR>`;  
+           
+             }
+             salida+= `<BR><BR>`;  
+                
+            }
+            salida = salida.slice(0, -13) + ";";
+    document.getElementById("resultado").innerHTML = salida;
+  
+}
+
+function generarNumeroAleatorio(min,max){
+    return Math.floor(Math.random()* (max-min)+min);
+}
+    </script>
+</head>
+<body>
+    
+        <input type="button" value="Generar ventas" onclick="generar()">
+        <input type="button" value="Generar SQL" onclick="guardar()">
+        
+    <p id="resultado"></p>
+</body>
+</html>
